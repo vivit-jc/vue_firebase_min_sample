@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>app</title>
+</head>
+<body>
+name:
+<input type="text" id="name"><br>
+<input type="text" id="textbox">
+<button onClick="writeText()">投稿</button>
+<div id="posts">
+</div>
+<script src="https://www.gstatic.com/firebasejs/7.9.3/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.9.3/firebase-database.js"></script>
+<script lang="js">
+const firebaseConfig = {
+  apiKey: "",
+  authDomain: "",
+  databaseURL: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
+};
+
+const app = firebase.initializeApp(firebaseConfig);
+
+firebase.database().ref('posts/').on('value', (snapshot) => {
+  const data = snapshot.val();
+  updateHTML(data)
+});
+
+function writeText() {
+  let name = document.getElementById("name").value;
+  let text = document.getElementById("textbox").value;
+  firebase.database().ref('posts/').push({
+    name: name,
+    message: text
+  });
+}
+
+function updateHTML(data){
+  let doc = ""
+  Object.values(data).forEach((e) => {
+    doc += "<p>"+e.name+": "+e.message+"</p>"
+  })
+  document.getElementById("posts").innerHTML = doc
+}
+</script>
+</body>
+</html>
