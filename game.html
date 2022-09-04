@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>app</title>
+  <style>
+    .pc{
+      position: absolute;
+    }
+    .img{
+      height: 32px;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+<div v-if="!start">
+  <input type="text" v-model="name"><br>
+  <button @click="login()">参加</button><br>
+</div>
+<div v-else>
+  <div v-for="player in players" :key="player" class="pc" :style="{top: player.y+'px', left: player.x+'px'}">
+    <img class="img" src="yuusha.jpg">
+    {{player.name}} {{player.HP}}
+  </div>
+</div>
+</div>
+<script src="https://www.gstatic.com/firebasejs/7.9.3/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.9.3/firebase-database.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+<script lang="js">
+const firebaseConfig = {
+  apiKey: "AIzaSyAb7JUQPaXi_5PQxwbJkfmDbzNjfC8mZ1A",
+  authDomain: "ooshimapcclass.firebaseapp.com",
+  databaseURL: "https://ooshimapcclass-default-rtdb.firebaseio.com",
+  projectId: "ooshimapcclass",
+  storageBucket: "ooshimapcclass.appspot.com",
+  messagingSenderId: "744273719248",
+  appId: "1:744273719248:web:17ce815ff77645eaaf93d5"
+
+};
+
+const app = firebase.initializeApp(firebaseConfig);
+
+const vueapp = {
+  el: '#app',
+  data(){
+    return {
+        start: false,
+        name:"",
+        text: "",
+        count: 0,
+        players: [],
+        pc: {x:0,y:0},
+        HP: 30
+      }
+    },
+    mounted(){
+      firebase.database().ref('players/').on('value', (snapshot) => {
+        const data = snapshot.val();
+        this.players = data
+      });
+      document.addEventListener('keydown', this.onKeyDown)
+    },
+    beforeDestroy() {
+      document.removeEventListener('keydown', this.onKeyDown)
+    },
+    methods: {
+      login(){
+        if(!this.name){return false}
+        if(this.players[this.name]){
+          this.pc.x = this.players[this.name].x
+          this.pc.y = this.players[this.name].y
+          this.HP = this.players[this.name].HP
+        }
+        firebase.database().ref('players/'+this.name).set({
+          x: this.pc.x,
+          y: this.pc.y,
+          name: this.name,
+          HP: this.HP
+        })
+        this.start = true
+      },
+      onKeyDown(event){
+        if(!this.start){return false}
+        if(event.key === "ArrowRight"){
+          this.pc.x += 15
+        } else if(event.key === "ArrowLeft"){
+          this.pc.x -= 15
+        } else if(event.key === "ArrowUp"){
+          this.pc.y -= 15
+        } else if(event.key === "ArrowDown"){
+          this.pc.y += 15
+        } else if(event.key === "a"){
+          this.HP += 10
+        } else if(event.key === "z"){
+          for(const [v,e] of Object.entries(this.players)){
+            if(Math.abs(e.x-this.pc.x)<70 && Math.abs(e.y-this.pc.y)<70){
+              console.log(e.name) // 近くのプレイヤーを探知する　これを攻撃とかに使う予定
+            }
+          }
+        }
+        firebase.database().ref('players/'+this.name).set({
+          x: this.pc.x,
+          y: this.pc.y,
+          name: this.name,
+          HP: this.HP
+        })
+      }
+    }
+}
+Vue.createApp(vueapp).mount('#app')
+</script>
+</body>
+</html>
